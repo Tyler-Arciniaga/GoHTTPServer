@@ -1,6 +1,7 @@
 package playlist
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -30,7 +31,7 @@ func TestPlaylistHandler_GET(t *testing.T) {
 		gotCode := response.Code
 		wantCode := 200
 
-		CheckResBody(t, PlaylistRes, wantBody)
+		AssertEqualPlaylists(t, PlaylistRes, wantBody)
 		CheckStatusCodes(t, gotCode, wantCode)
 	})
 
@@ -48,7 +49,7 @@ func TestPlaylistHandler_GET(t *testing.T) {
 		gotCode := response.Code
 		wantCode := 200
 
-		CheckResBody(t, PlaylistRes, wantBody)
+		AssertEqualPlaylists(t, PlaylistRes, wantBody)
 		CheckStatusCodes(t, gotCode, wantCode)
 	})
 
@@ -77,26 +78,59 @@ func TestPlaylistHandler_Post(t *testing.T) {
 		TestHandler.ServeHTTP(response, request)
 
 		got := response.Code
-		want := http.StatusAccepted
+		want := http.StatusCreated
 
 		CheckStatusCodes(t, got, want)
 	})
 
 	t.Run("test post method correct stores a new playlist object", func(t *testing.T) {
-		newPlaylist := `{"name": "Playlist2", "author": "Mom", "created_at": "2022", "tracks" : []}`
-		body := strings.NewReader(newPlaylist)
+		newPlaylist := Playlist{"Playlist3", "Dad", "2023", []Track{}}
+		bodyBytes, _ := json.Marshal(newPlaylist)
+		body := bytes.NewReader(bodyBytes)
 		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
 		response := httptest.NewRecorder()
 
 		TestHandler.ServeHTTP(response, request)
 
-		if len(TestService.PlaylistStore) != 1 {
-			t.Errorf("Playlist was not stored: want %d, got %d", 1, len(TestService.PlaylistStore))
+		CheckStatusCodes(t, response.Code, http.StatusCreated)
+
+		if len(TestService.PlaylistStore) != 2 {
+			t.Errorf("Playlist was not stored: want %d, got %d", 2, len(TestService.PlaylistStore))
 		}
+		AssertEqualPlaylists(t, TestService.PlaylistStore["Playlist3"], newPlaylist)
+	})
+
+	t.Run("test post method failing to store a duplicate playlist object", func(t *testing.T) {
+		newPlaylist := Playlist{"Playlist4", "Bodhi", "2021", []Track{}}
+		bodyBytes, _ := json.Marshal(newPlaylist)
+		body := bytes.NewReader(bodyBytes)
+
+		firstReq, _ := http.NewRequest(http.MethodPost, "/playlist", body)
+		response1 := httptest.NewRecorder()
+		TestHandler.ServeHTTP(response1, firstReq)
+
+		if len(TestService.PlaylistStore) != 3 {
+			t.Errorf("Playlist was not stored: want %d, got %d", 3, len(TestService.PlaylistStore))
+		}
+		AssertEqualPlaylists(t, TestService.PlaylistStore["Playlist4"], newPlaylist)
+
+		body = bytes.NewReader(bodyBytes)
+		request2, _ := http.NewRequest(http.MethodPost, "/playlist", body)
+		response2 := httptest.NewRecorder()
+
+		TestHandler.ServeHTTP(response2, request2)
+
+		if len(TestService.PlaylistStore) != 3 {
+			t.Errorf("Duplicates both stored: want %d, got %d", 3, len(TestService.PlaylistStore))
+		}
+
+		CheckStatusCodes(t, response1.Code, http.StatusCreated)
+		CheckStatusCodes(t, response2.Code, http.StatusConflict)
+
 	})
 }
 
-func CheckResBody(t *testing.T, res1, res2 Playlist) {
+func AssertEqualPlaylists(t *testing.T, res1, res2 Playlist) {
 	if reflect.DeepEqual(res1, res2) == false {
 		t.Errorf("got %q, want %q", res1, res2)
 	}

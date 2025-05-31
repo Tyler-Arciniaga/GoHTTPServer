@@ -38,8 +38,8 @@ func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) PostPlaylist(w http.ResponseWriter, r *http.Request) {
 	var newPlaylist Playlist
 	json.NewDecoder(r.Body).Decode(&newPlaylist)
-	h.Service.StoreNewPlaylist(newPlaylist)
-	w.WriteHeader(http.StatusAccepted)
+	statusCode := h.Service.StoreNewPlaylist(newPlaylist)
+	w.WriteHeader(statusCode)
 }
 
 func checkErr(e error, m string, w http.ResponseWriter) {

@@ -1,6 +1,8 @@
 package playlist
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Service struct {
 	PlaylistStore map[string]Playlist
@@ -17,6 +19,12 @@ func (s *Service) FetchPlaylistData(name string) (Playlist, int) {
 }
 
 func (s *Service) StoreNewPlaylist(p Playlist) int {
-	s.PlaylistStore[p.Name] = p
-	return http.StatusCreated
+	_, ok := s.PlaylistStore[p.Name]
+	if ok {
+		return http.StatusConflict
+	} else {
+		s.PlaylistStore[p.Name] = p
+		return http.StatusCreated
+	}
+
 }
