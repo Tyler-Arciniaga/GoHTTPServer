@@ -14,13 +14,37 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		h.GetPlaylist(w, r)
+	case http.MethodPost:
+		h.PostPlaylist(w, r)
 	}
 }
 
 func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
+	//trim prefix to extract just the playlist name
 	playlistName := strings.TrimPrefix(r.URL.Path, "/playlist/")
+
+	//fetch playlist data from services and add code to res header
 	fetchedPlaylist, code := h.Service.FetchPlaylistData(playlistName)
 	w.WriteHeader(code)
-	formattedRes, _ := json.Marshal(fetchedPlaylist)
+
+	//marshal fetched playlist data as JSON
+	formattedRes, e := json.Marshal(fetchedPlaylist)
+	checkErr(e, "Error marshaling playlist data as JSON", w)
+
+	//write to response writer
 	w.Write(formattedRes)
+}
+
+func (h *Handler) PostPlaylist(w http.ResponseWriter, r *http.Request) {
+	var newPlaylist Playlist
+	json.NewDecoder(r.Body).Decode(&newPlaylist)
+	h.Service.StoreNewPlaylist(newPlaylist)
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func checkErr(e error, m string, w http.ResponseWriter) {
+	if e != nil {
+		http.Error(w, m, http.StatusInternalServerError)
+		return
+	}
 }

@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-func TestPlaylistHandler_CoreLogic(t *testing.T) {
+func TestPlaylistHandler_GET(t *testing.T) {
 	TestService := &Service{}
 	TestHandler := &Handler{Service: TestService}
 	PlaylistDB := map[string]Playlist{
@@ -60,6 +61,38 @@ func TestPlaylistHandler_CoreLogic(t *testing.T) {
 		got := response.Code
 		want := 404
 		CheckStatusCodes(t, got, want)
+	})
+}
+
+func TestPlaylistHandler_Post(t *testing.T) {
+
+	TestService := &Service{make(map[string]Playlist)}
+	TestHandler := &Handler{Service: TestService}
+	t.Run("test post method returns accepted status code", func(t *testing.T) {
+		newPlaylist := `{"name": "Playlist2", "author": "Mom", "created_at": "2022", "tracks" : []}`
+		body := strings.NewReader(newPlaylist)
+		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
+		response := httptest.NewRecorder()
+
+		TestHandler.ServeHTTP(response, request)
+
+		got := response.Code
+		want := http.StatusAccepted
+
+		CheckStatusCodes(t, got, want)
+	})
+
+	t.Run("test post method correct stores a new playlist object", func(t *testing.T) {
+		newPlaylist := `{"name": "Playlist2", "author": "Mom", "created_at": "2022", "tracks" : []}`
+		body := strings.NewReader(newPlaylist)
+		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
+		response := httptest.NewRecorder()
+
+		TestHandler.ServeHTTP(response, request)
+
+		if len(TestService.PlaylistStore) != 1 {
+			t.Errorf("Playlist was not stored: want %d, got %d", 1, len(TestService.PlaylistStore))
+		}
 	})
 }
 
