@@ -10,6 +10,7 @@ type Handler struct {
 	Service *Service
 }
 
+/*
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -18,8 +19,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.PostPlaylist(w, r)
 	}
 }
+*/
 
-func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetSinglePlaylist(w http.ResponseWriter, r *http.Request) {
 	//trim prefix to extract just the playlist name
 	playlistName := strings.TrimPrefix(r.URL.Path, "/playlist/")
 
@@ -29,15 +31,27 @@ func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 
 	//marshal fetched playlist data as JSON
 	formattedRes, e := json.Marshal(fetchedPlaylist)
-	checkErr(e, "Error marshaling playlist data as JSON", w)
+	checkErr(e, "Error marshaling single playlist data as JSON", w)
 
 	//write to response writer
 	w.Write(formattedRes)
 }
 
+func (h *Handler) GetAllPlaylists(w http.ResponseWriter, r *http.Request) {
+	PlaylistMap, code := h.Service.FetchAllPlaylists()
+
+	w.WriteHeader(code)
+	formattedRes, e := json.Marshal(PlaylistMap)
+	checkErr(e, "Error marshaling all playlist data as JSON", w)
+	w.Write(formattedRes)
+}
+
 func (h *Handler) PostPlaylist(w http.ResponseWriter, r *http.Request) {
+	//decode incoming io.Reader and convert into playlist struct type
 	var newPlaylist Playlist
 	json.NewDecoder(r.Body).Decode(&newPlaylist)
+
+	//return status code in response
 	statusCode := h.Service.StoreNewPlaylist(newPlaylist)
 	w.WriteHeader(statusCode)
 }

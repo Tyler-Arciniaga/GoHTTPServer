@@ -9,13 +9,20 @@ type Service struct {
 }
 
 func (s *Service) FetchPlaylistData(name string) (Playlist, int) {
-	if name == "Playlist1" {
-		return Playlist{"Playlist1", "Tyler", "2016", []Track{}}, http.StatusOK
+	p, ok := s.PlaylistStore[name]
+	if ok {
+		return p, http.StatusOK
+	} else {
+		return Playlist{"Invalid", "Invalid", "Invalid", []Track{}}, http.StatusNotFound
 	}
-	if name == "Chill-Vibes" {
-		return Playlist{"Chill-Vibes", "Derek", "2020", []Track{}}, http.StatusOK
+}
+
+func (s *Service) FetchAllPlaylists() (map[string]Playlist, int) {
+	if len(s.PlaylistStore) > 1 {
+		return s.PlaylistStore, http.StatusOK
+	} else {
+		return nil, http.StatusBadRequest
 	}
-	return Playlist{"Invalid", "Invalid", "Invalid", []Track{}}, http.StatusNotFound
 }
 
 func (s *Service) StoreNewPlaylist(p Playlist) int {

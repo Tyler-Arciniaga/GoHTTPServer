@@ -11,22 +11,22 @@ import (
 )
 
 func TestPlaylistHandler_GET(t *testing.T) {
-	TestService := &Service{}
-	TestHandler := &Handler{Service: TestService}
-	PlaylistDB := map[string]Playlist{
+	store := map[string]Playlist{
 		"Playlist1":   {"Playlist1", "Tyler", "2016", []Track{}},
 		"Chill-Vibes": {"Chill-Vibes", "Derek", "2020", []Track{}},
 	}
+	TestService := &Service{PlaylistStore: store}
+	TestHandler := &Handler{Service: TestService}
 	t.Run("test good get request and response", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/playlist/Playlist1", nil)
 		response := httptest.NewRecorder()
 
-		TestHandler.ServeHTTP(response, request)
+		TestHandler.GetSinglePlaylist(response, request)
 
 		var PlaylistRes Playlist
 		json.Unmarshal(response.Body.Bytes(), &PlaylistRes)
 		//gotBody := response.Body
-		wantBody := PlaylistDB["Playlist1"]
+		wantBody := store["Playlist1"]
 
 		gotCode := response.Code
 		wantCode := 200
@@ -39,12 +39,12 @@ func TestPlaylistHandler_GET(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/playlist/Chill-Vibes", nil)
 		response := httptest.NewRecorder()
 
-		TestHandler.ServeHTTP(response, request)
+		TestHandler.GetSinglePlaylist(response, request)
 
 		var PlaylistRes Playlist
 		json.Unmarshal(response.Body.Bytes(), &PlaylistRes)
 		//gotBody := response.Body.String()
-		wantBody := PlaylistDB["Chill-Vibes"]
+		wantBody := store["Chill-Vibes"]
 
 		gotCode := response.Code
 		wantCode := 200
@@ -57,16 +57,33 @@ func TestPlaylistHandler_GET(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/playlist/Random", nil)
 		response := httptest.NewRecorder()
 
-		TestHandler.ServeHTTP(response, request)
+		TestHandler.GetSinglePlaylist(response, request)
+
+		gotCode := response.Code
+		wantCode := 404
+		CheckStatusCodes(t, gotCode, wantCode)
+	})
+
+	t.Run("test get request for all playlists in store", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/playlist", nil)
+		response := httptest.NewRecorder()
+
+		TestHandler.GetAllPlaylists(response, request)
 
 		got := response.Code
-		want := 404
+		want := http.StatusOK
+
+		wantBody, _ := json.Marshal(TestService.PlaylistStore)
+		gotBody := response.Body.Bytes()
+
 		CheckStatusCodes(t, got, want)
+		if !(bytes.EqualFold(wantBody, gotBody)) {
+			GenericErrorLog(t, got, want)
+		}
 	})
 }
 
 func TestPlaylistHandler_Post(t *testing.T) {
-
 	TestService := &Service{make(map[string]Playlist)}
 	TestHandler := &Handler{Service: TestService}
 	t.Run("test post method returns accepted status code", func(t *testing.T) {
@@ -75,7 +92,7 @@ func TestPlaylistHandler_Post(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
 		response := httptest.NewRecorder()
 
-		TestHandler.ServeHTTP(response, request)
+		TestHandler.PostPlaylist(response, request)
 
 		got := response.Code
 		want := http.StatusCreated
@@ -90,7 +107,7 @@ func TestPlaylistHandler_Post(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
 		response := httptest.NewRecorder()
 
-		TestHandler.ServeHTTP(response, request)
+		TestHandler.PostPlaylist(response, request)
 
 		CheckStatusCodes(t, response.Code, http.StatusCreated)
 
@@ -107,7 +124,7 @@ func TestPlaylistHandler_Post(t *testing.T) {
 
 		firstReq, _ := http.NewRequest(http.MethodPost, "/playlist", body)
 		response1 := httptest.NewRecorder()
-		TestHandler.ServeHTTP(response1, firstReq)
+		TestHandler.PostPlaylist(response1, firstReq)
 
 		if len(TestService.PlaylistStore) != 3 {
 			t.Errorf("Playlist was not stored: want %d, got %d", 3, len(TestService.PlaylistStore))
@@ -118,7 +135,7 @@ func TestPlaylistHandler_Post(t *testing.T) {
 		request2, _ := http.NewRequest(http.MethodPost, "/playlist", body)
 		response2 := httptest.NewRecorder()
 
-		TestHandler.ServeHTTP(response2, request2)
+		TestHandler.PostPlaylist(response2, request2)
 
 		if len(TestService.PlaylistStore) != 3 {
 			t.Errorf("Duplicates both stored: want %d, got %d", 3, len(TestService.PlaylistStore))
@@ -139,4 +156,7 @@ func CheckStatusCodes(t *testing.T, code1, code2 int) {
 	if code1 != code2 {
 		t.Errorf("got %d, want %d", code1, code2)
 	}
+}
+func GenericErrorLog(t *testing.T, got, want any) {
+	t.Errorf("got %q, want %q", got, want)
 }
