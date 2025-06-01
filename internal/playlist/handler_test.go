@@ -146,6 +146,50 @@ func TestPlaylistHandler_Post(t *testing.T) {
 
 	})
 }
+func TestPlaylistHandler_POST_Tracks(t *testing.T) {
+	store := map[string]Playlist{
+		"ShoeGaze":    {"ShoeGaze", "Tyler", "2016", []Track{}},
+		"Chill-Vibes": {"Chill-Vibes", "Derek", "2020", []Track{}},
+	}
+	TestService := &Service{PlaylistStore: store}
+	TestHandler := &Handler{Service: TestService}
+
+	TestSong := Track{"Vividly", "Whirr", "Feels Like You"}
+
+	t.Run("test adding songs to existing playlist", func(t *testing.T) {
+		bodyBytes, _ := json.Marshal(TestSong)
+		body := bytes.NewReader(bodyBytes)
+		request, _ := http.NewRequest(http.MethodGet, "/playlist/ShoeGaze/tracks", body)
+		response := httptest.NewRecorder()
+
+		TestHandler.PostPlaylistTrack(response, request)
+
+		gotCode := response.Code
+		wantCode := http.StatusCreated
+
+		gotRes := TestService.PlaylistStore["ShoeGaze"].Tracks[0]
+		wantRes := TestSong
+
+		CheckStatusCodes(t, gotCode, wantCode)
+		if gotRes != wantRes {
+			GenericErrorLog(t, gotRes, wantRes)
+		}
+	})
+
+	t.Run("test adding song to non existent playlist", func(t *testing.T) {
+		bodyBytes, _ := json.Marshal(TestSong)
+		body := bytes.NewReader(bodyBytes)
+		request, _ := http.NewRequest(http.MethodGet, "/playlist/NotHere/tracks", body)
+		response := httptest.NewRecorder()
+
+		TestHandler.PostPlaylistTrack(response, request)
+
+		gotCode := response.Code
+		wantCode := http.StatusBadRequest
+
+		CheckStatusCodes(t, gotCode, wantCode)
+	})
+}
 
 func AssertEqualPlaylists(t *testing.T, res1, res2 Playlist) {
 	if reflect.DeepEqual(res1, res2) == false {

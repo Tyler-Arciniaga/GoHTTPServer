@@ -21,6 +21,7 @@ func main() {
 		r.Get("/{name}", playlistHandler.GetSinglePlaylist)
 		r.Get("/", playlistHandler.GetAllPlaylists)
 		r.Post("/", playlistHandler.PostPlaylist)
+		r.Post("/{name}/tracks", playlistHandler.PostPlaylistTrack)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))

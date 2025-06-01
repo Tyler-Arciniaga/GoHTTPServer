@@ -8,7 +8,7 @@ type Playlist struct {
 }
 
 type Track struct {
-	Title  string
-	Artist string
-	Album  string
+	Title  string `json:"title"`
+	Artist string `json:"artist"`
+	Album  string `json:"album"`
 }

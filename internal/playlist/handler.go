@@ -56,6 +56,18 @@ func (h *Handler) PostPlaylist(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(statusCode)
 }
 
+func (h *Handler) PostPlaylistTrack(w http.ResponseWriter, r *http.Request) {
+	playlistName := strings.TrimPrefix(r.URL.Path, "/playlist/")
+	playlistName = strings.TrimSuffix(playlistName, "/tracks")
+
+	var newTrack Track
+	json.NewDecoder(r.Body).Decode(&newTrack)
+
+	statusCode := h.Service.AddNewPlaylistTrack(playlistName, newTrack)
+	w.WriteHeader(statusCode)
+
+}
+
 func checkErr(e error, m string, w http.ResponseWriter) {
 	if e != nil {
 		http.Error(w, m, http.StatusInternalServerError)

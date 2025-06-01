@@ -33,5 +33,16 @@ func (s *Service) StoreNewPlaylist(p Playlist) int {
 		s.PlaylistStore[p.Name] = p
 		return http.StatusCreated
 	}
+}
 
+func (s *Service) AddNewPlaylistTrack(p string, t Track) int {
+	_, ok := s.PlaylistStore[p]
+	if ok {
+		PlaylistCopy := s.PlaylistStore[p]
+		PlaylistCopy.Tracks = append(PlaylistCopy.Tracks, t)
+		s.PlaylistStore[p] = PlaylistCopy
+		return http.StatusCreated
+	} else {
+		return http.StatusBadRequest
+	}
 }
