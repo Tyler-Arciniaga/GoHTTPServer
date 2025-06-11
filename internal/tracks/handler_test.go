@@ -51,3 +51,26 @@ func TestTracksHandler_GetTrack(t *testing.T) {
 		}
 	})
 }
+
+func TestTracksHandler_PostVotes(t *testing.T) {
+	store := map[int]Track{
+		1: {"How Time Stretches", "Whirr", "Feels Like You", 1},
+		2: {"Mellow", "Whirr", "Feels Like You", 1},
+	}
+	TestService := Service{TrackStore: store}
+	TestHandler := Handler{Service: &TestService}
+
+	t.Run("increment track's vote when Post /tracks/{id} route is hit", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, "/tracks/1", nil)
+		res := httptest.NewRecorder()
+
+		TestHandler.AddTrackVote(res, req)
+
+		got := TestHandler.Service.TrackStore[1].Votes
+		want := 2
+
+		if got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
+	})
+}

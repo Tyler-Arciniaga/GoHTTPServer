@@ -7,19 +7,9 @@ import (
 )
 
 type Handler struct {
-	Service *Service
+	Service     *Service
+	UserService UserService
 }
-
-/*
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		h.GetPlaylist(w, r)
-	case http.MethodPost:
-		h.PostPlaylist(w, r)
-	}
-}
-*/
 
 func (h *Handler) GetSinglePlaylist(w http.ResponseWriter, r *http.Request) {
 	//trim prefix to extract just the playlist name
@@ -38,11 +28,15 @@ func (h *Handler) GetSinglePlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetAllPlaylists(w http.ResponseWriter, r *http.Request) {
+	//retrieve map of all playlists in db/store
 	PlaylistMap, code := h.Service.FetchAllPlaylists()
 
-	w.WriteHeader(code)
+	//marhsal playlist map into JSON
 	formattedRes, e := json.Marshal(PlaylistMap)
 	checkErr(e, "Error marshaling all playlist data as JSON", w)
+
+	//write code and JSON response
+	w.WriteHeader(code)
 	w.Write(formattedRes)
 }
 
@@ -57,15 +51,19 @@ func (h *Handler) PostPlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostPlaylistTrack(w http.ResponseWriter, r *http.Request) {
+	//extract just the playlist name
 	playlistName := strings.TrimPrefix(r.URL.Path, "/playlist/")
 	playlistName = strings.TrimSuffix(playlistName, "/tracks")
 
+	//decode the new track from json into Track object
 	var newTrack Track
 	json.NewDecoder(r.Body).Decode(&newTrack)
 
+	//add new track to desired playlist
 	statusCode := h.Service.AddNewPlaylistTrack(playlistName, newTrack)
-	w.WriteHeader(statusCode)
 
+	//return status code
+	w.WriteHeader(statusCode)
 }
 
 func checkErr(e error, m string, w http.ResponseWriter) {

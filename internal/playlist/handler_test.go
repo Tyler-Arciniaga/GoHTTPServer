@@ -154,7 +154,7 @@ func TestPlaylistHandler_POST_Tracks(t *testing.T) {
 	TestService := &Service{PlaylistStore: store}
 	TestHandler := &Handler{Service: TestService}
 
-	TestSong := Track{"Vividly", "Whirr", "Feels Like You"}
+	TestSong := Track{"Vividly", "Whirr", "Feels Like You", 1}
 
 	t.Run("test adding songs to existing playlist", func(t *testing.T) {
 		bodyBytes, _ := json.Marshal(TestSong)
@@ -171,7 +171,7 @@ func TestPlaylistHandler_POST_Tracks(t *testing.T) {
 		wantRes := TestSong
 
 		CheckStatusCodes(t, gotCode, wantCode)
-		if gotRes != wantRes {
+		if !(reflect.DeepEqual(gotRes, wantRes)) {
 			GenericErrorLog(t, gotRes, wantRes)
 		}
 	})
