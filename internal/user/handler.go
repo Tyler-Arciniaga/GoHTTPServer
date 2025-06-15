@@ -22,7 +22,10 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	var loginUser UserMini
 	json.NewDecoder(r.Body).Decode(&loginUser)
 
-	code := h.Service.LoginUser(loginUser)
+	code, jwt := h.Service.LoginUser(loginUser)
 
 	w.WriteHeader(code)
+	if code == http.StatusOK {
+		w.Write([]byte(jwt))
+	}
 }

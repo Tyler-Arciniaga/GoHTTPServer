@@ -10,3 +10,11 @@ type UserMini struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+/*
+type JWTClaims struct {
+	UserID   string `json:"userID"`
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+*/

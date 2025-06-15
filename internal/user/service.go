@@ -2,7 +2,9 @@ package user
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,18 +29,39 @@ func (s *Service) AppendUser(u UserMini) int {
 	}
 }
 
-func (s *Service) LoginUser(u UserMini) int {
+func (s *Service) LoginUser(u UserMini) (int, string) {
 	userDB, ok := s.UserStore[u.Username]
 	if ok {
 		if s.ComparePasswordHash(userDB.HashedPassword, u.Password) {
 			//eventually return JWT token
-			return http.StatusOK
+			jwt, e := s.GenerateJWT(userDB)
+			if e != nil {
+				return http.StatusInternalServerError, jwt
+			} else {
+				return http.StatusOK, jwt
+			}
 		} else {
-			return http.StatusUnauthorized
+			return http.StatusUnauthorized, ""
 		}
 	} else {
-		return http.StatusUnauthorized
+		return http.StatusUnauthorized, ""
 	}
+}
+
+func (s *Service) GenerateJWT(u UserDB) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": u.Username,
+		"userID":   u.UUID,
+		"iss":      "mixtapeAPI",
+		"exp":      time.Now().Add(time.Hour).Unix(),
+		"iat":      time.Now().Unix(),
+	})
+
+	sampleSecret := "secretKeyChangeLater"
+
+	tokenString, err := token.SignedString([]byte(sampleSecret))
+	return tokenString, err
+
 }
 
 func (s *Service) HashPassword(p string) (string, error) {
