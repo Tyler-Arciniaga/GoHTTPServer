@@ -49,13 +49,16 @@ func (s *Service) LoginUser(u UserMini) (int, string) {
 }
 
 func (s *Service) GenerateJWT(u UserDB) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": u.Username,
-		"userID":   u.UUID,
-		"iss":      "mixtapeAPI",
-		"exp":      time.Now().Add(time.Hour).Unix(),
-		"iat":      time.Now().Unix(),
-	})
+	claims := JWTClaims{
+		UserID:   u.UUID,
+		Username: u.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "mixtapeAPI",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	sampleSecret := "secretKeyChangeLater"
 

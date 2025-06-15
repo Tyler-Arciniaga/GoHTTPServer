@@ -14,6 +14,7 @@ func AuthMiddleWare(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("No authorization header and/or bearer token found in request"))
 			return
 		}
 
@@ -22,16 +23,18 @@ func AuthMiddleWare(next http.Handler) http.Handler {
 
 		if tokenString == "" {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("No JWT provided"))
 			return
 		}
 
 		//Parse JWT token using custom JWTClaims type and secret key for JWT signature
 		token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(t *jwt.Token) (any, error) {
-			return "secretKeyChangeLater", nil
+			return []byte("secretKeyChangeLater"), nil
 		})
 
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Error parsing JWT claims"))
 			return
 		}
 
@@ -39,14 +42,12 @@ func AuthMiddleWare(next http.Handler) http.Handler {
 		claims, ok := token.Claims.(*JWTClaims)
 		if !ok || !token.Valid {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Invalid JWT"))
 			return
 		}
 
 		//Inject userID into request context for future handlers/business logic
-		type ContextKey string
-		k := ContextKey("userID")
-
-		ctx := context.WithValue(r.Context(), k, claims.UserID)
+		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 		r = r.WithContext(ctx)
 
 		//Call next handler's (business logic) ServeHTTP() w/ new request context

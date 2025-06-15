@@ -7,3 +7,7 @@ type JWTClaims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
+
+type ContextKey string
+
+const UserIDKey ContextKey = "userID"

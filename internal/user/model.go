@@ -1,5 +1,7 @@
 package user
 
+import "github.com/golang-jwt/jwt/v5"
+
 type UserDB struct {
 	UUID           string `json:"uuid"`
 	Username       string `json:"username"`
@@ -11,10 +13,8 @@ type UserMini struct {
 	Password string `json:"password"`
 }
 
-/*
 type JWTClaims struct {
 	UserID   string `json:"userID"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
-*/
