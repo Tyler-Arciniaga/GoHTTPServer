@@ -2,7 +2,7 @@ package playlist
 
 type Playlist struct {
 	Name       string  `json:"name"`
-	Author     string  `json:"author"`
+	Author     *string `json:"author"`
 	Created_at string  `json:"created_at"`
 	Tracks     []Track `json:"tracks"`
 }

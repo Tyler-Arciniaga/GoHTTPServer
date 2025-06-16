@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func GetUserIDFromContext(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value(UserIDKey).(string)
+func GetUsernameFromContext(ctx context.Context) (string, bool) {
+	userID, ok := ctx.Value(UsernameKey).(string)
 	return userID, ok
 }

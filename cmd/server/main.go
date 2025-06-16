@@ -13,9 +13,11 @@ import (
 
 func main() {
 	r := chi.NewRouter()
+	t := "Tyler"
+	d := "Derek"
 	PlaylistStore := map[string]playlist.Playlist{
-		"Playlist1":   {Name: "Playlist1", Author: "Tyler", Created_at: "2016", Tracks: []playlist.Track{}},
-		"Chill-Vibes": {Name: "Chill-Vibes", Author: "Derek", Created_at: "2020", Tracks: []playlist.Track{}},
+		"Playlist1":   {Name: "Playlist1", Author: &t, Created_at: "2016", Tracks: []playlist.Track{}},
+		"Chill-Vibes": {Name: "Chill-Vibes", Author: &d, Created_at: "2020", Tracks: []playlist.Track{}},
 	}
 	playlistService := &playlist.Service{PlaylistStore: PlaylistStore}
 	playlistHandler := &playlist.Handler{Service: playlistService}

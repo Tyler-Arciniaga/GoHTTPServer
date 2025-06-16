@@ -13,7 +13,7 @@ func (s *Service) FetchPlaylistData(name string) (Playlist, int) {
 	if ok {
 		return p, http.StatusOK
 	} else {
-		return Playlist{"Invalid", "Invalid", "Invalid", []Track{}}, http.StatusNotFound
+		return Playlist{Name: "Invalid", Created_at: "Invalid", Tracks: []Track{}}, http.StatusNotFound
 	}
 }
 

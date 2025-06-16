@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/Tyler-Arciniaga/MixTapeAPI/internal/auth"
 )
 
 type Handler struct {
@@ -31,7 +33,13 @@ func (h *Handler) AddTrackVote(w http.ResponseWriter, r *http.Request) {
 	trackID, err := extractTrackID(r.URL.Path)
 	checkErr(err, "Invalid query param, requires an integer id", w)
 
-	code := h.Service.IncrementTrackVote(trackID)
+	username, ok := auth.GetUsernameFromContext(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	code := h.Service.IncrementTrackVote(trackID, username)
 
 	w.WriteHeader(code)
 }

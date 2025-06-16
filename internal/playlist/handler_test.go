@@ -2,18 +2,23 @@ package playlist
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/Tyler-Arciniaga/MixTapeAPI/internal/auth"
 )
 
 func TestPlaylistHandler_GET(t *testing.T) {
+	ty := "Tyler"
+	d := "Derek"
 	store := map[string]Playlist{
-		"Playlist1":   {"Playlist1", "Tyler", "2016", []Track{}},
-		"Chill-Vibes": {"Chill-Vibes", "Derek", "2020", []Track{}},
+		"Playlist1":   {"Playlist1", &ty, "2016", []Track{}},
+		"Chill-Vibes": {"Chill-Vibes", &d, "2020", []Track{}},
 	}
 	TestService := &Service{PlaylistStore: store}
 	TestHandler := &Handler{Service: TestService}
@@ -87,9 +92,12 @@ func TestPlaylistHandler_Post(t *testing.T) {
 	TestService := &Service{make(map[string]Playlist)}
 	TestHandler := &Handler{Service: TestService}
 	t.Run("test post method returns accepted status code", func(t *testing.T) {
-		newPlaylist := `{"name": "Playlist2", "author": "Mom", "created_at": "2022", "tracks" : []}`
+		newPlaylist := `{"name": "Playlist2", "created_at": "2022", "tracks" : []}`
 		body := strings.NewReader(newPlaylist)
 		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
+		c := context.WithValue(request.Context(), auth.UsernameKey, "n")
+
+		request = request.WithContext(c)
 		response := httptest.NewRecorder()
 
 		TestHandler.PostPlaylist(response, request)
@@ -101,7 +109,8 @@ func TestPlaylistHandler_Post(t *testing.T) {
 	})
 
 	t.Run("test post method correct stores a new playlist object", func(t *testing.T) {
-		newPlaylist := Playlist{"Playlist3", "Dad", "2023", []Track{}}
+		//newPlaylist := Playlist{"Playlist3", "2023", []Track{}}
+		newPlaylist := Playlist{Name: "Playlist3", Created_at: "2023", Tracks: []Track{}}
 		bodyBytes, _ := json.Marshal(newPlaylist)
 		body := bytes.NewReader(bodyBytes)
 		request, _ := http.NewRequest(http.MethodPost, "/playlist", body)
@@ -118,7 +127,8 @@ func TestPlaylistHandler_Post(t *testing.T) {
 	})
 
 	t.Run("test post method failing to store a duplicate playlist object", func(t *testing.T) {
-		newPlaylist := Playlist{"Playlist4", "Bodhi", "2021", []Track{}}
+		b := "Bodhi"
+		newPlaylist := Playlist{"Playlist4", &b, "2021", []Track{}}
 		bodyBytes, _ := json.Marshal(newPlaylist)
 		body := bytes.NewReader(bodyBytes)
 
@@ -147,9 +157,11 @@ func TestPlaylistHandler_Post(t *testing.T) {
 	})
 }
 func TestPlaylistHandler_POST_Tracks(t *testing.T) {
+	ty := "Tyler"
+	d := "Derek"
 	store := map[string]Playlist{
-		"ShoeGaze":    {"ShoeGaze", "Tyler", "2016", []Track{}},
-		"Chill-Vibes": {"Chill-Vibes", "Derek", "2020", []Track{}},
+		"ShoeGaze":    {"ShoeGaze", &ty, "2016", []Track{}},
+		"Chill-Vibes": {"Chill-Vibes", &d, "2020", []Track{}},
 	}
 	TestService := &Service{PlaylistStore: store}
 	TestHandler := &Handler{Service: TestService}
@@ -193,7 +205,8 @@ func TestPlaylistHandler_POST_Tracks(t *testing.T) {
 
 func AssertEqualPlaylists(t *testing.T, res1, res2 Playlist) {
 	if reflect.DeepEqual(res1, res2) == false {
-		t.Errorf("got %q, want %q", res1, res2)
+		//t.Errorf("got %q, want %q", res1, res2)
+		t.Errorf("Unequal playlists detected!")
 	}
 }
 func CheckStatusCodes(t *testing.T, code1, code2 int) {

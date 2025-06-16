@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/Tyler-Arciniaga/MixTapeAPI/internal/auth"
 )
 
 type Handler struct {
@@ -44,6 +46,13 @@ func (h *Handler) PostPlaylist(w http.ResponseWriter, r *http.Request) {
 	//decode incoming io.Reader and convert into playlist struct type
 	var newPlaylist Playlist
 	json.NewDecoder(r.Body).Decode(&newPlaylist)
+
+	username, ok := auth.GetUsernameFromContext(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	newPlaylist.Author = &username
 
 	//return status code in response
 	statusCode := h.Service.StoreNewPlaylist(newPlaylist)

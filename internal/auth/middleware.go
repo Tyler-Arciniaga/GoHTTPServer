@@ -47,7 +47,7 @@ func AuthMiddleWare(next http.Handler) http.Handler {
 		}
 
 		//Inject userID into request context for future handlers/business logic
-		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+		ctx := context.WithValue(r.Context(), UsernameKey, claims.Username)
 		r = r.WithContext(ctx)
 
 		//Call next handler's (business logic) ServeHTTP() w/ new request context

@@ -17,11 +17,15 @@ func (s *Service) FetchTrack(id int) (Track, int) {
 	}
 }
 
-func (s *Service) IncrementTrackVote(id int) int {
+func (s *Service) IncrementTrackVote(id int, u string) int {
 	t, ok := s.TrackStore[id]
 	if ok {
+		if _, exists := t.Voters[u]; exists {
+			return http.StatusBadRequest
+		}
 		temp := t
 		temp.Votes++
+		temp.Voters[u] = struct{}{}
 		s.TrackStore[id] = temp
 
 		return http.StatusCreated

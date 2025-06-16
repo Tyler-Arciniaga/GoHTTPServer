@@ -10,4 +10,4 @@ type JWTClaims struct {
 
 type ContextKey string
 
-const UserIDKey ContextKey = "userID"
+const UsernameKey ContextKey = "username"
