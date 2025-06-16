@@ -23,8 +23,8 @@ func main() {
 	playlistHandler := &playlist.Handler{Service: playlistService}
 
 	TrackStore := map[int]tracks.Track{
-		1: {Title: "How Time Stretches", Artist: "Whirr", Album: "Feels Like You", Votes: 1},
-		2: {Title: "Mellow", Artist: "Whirr", Album: "Feels Like You", Votes: 1},
+		1: {Title: "How Time Stretches", Artist: "Whirr", Album: "Feels Like You", Votes: 1, Voters: map[string]struct{}{}},
+		2: {Title: "Mellow", Artist: "Whirr", Album: "Feels Like You", Votes: 1, Voters: map[string]struct{}{}},
 	}
 	tracksService := &tracks.Service{TrackStore: TrackStore}
 	trackshandler := &tracks.Handler{Service: tracksService}
